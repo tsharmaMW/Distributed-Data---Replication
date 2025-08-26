@@ -13,7 +13,7 @@ Part 1 - we discussed aspects of data systems that apply when data is stored on 
 - Buy more powerful machines.
 - Connect many CPUs, RAMs and disks under one OS.
 - Shared-memory architecture, all components can be treated as single machine.
-- Another approach is shared-disk architecture - independent CPUs and Ramp, but stores data on an array of disks which is shared between machines.
+- Another approach is shared-disk architecture - independent CPUs and Ram, but stores data on an array of disks which is shared between machines.
     - Due to locking and contention (multiple nodes trying to access the same data), adding more machines doesn't linerarly improve performance (thus limits scalability).
 
 ---
@@ -28,7 +28,7 @@ Part 1 - we discussed aspects of data systems that apply when data is stored on 
 - No special hardware is required. Coordination between nodes is done at the software level.
 
 ### Advantages
-- You can use whatever machines have the best price/performance ration.
+- You can use whatever machines have the best price/performance ratio.
 - Distribute data across multiple geographic regions - reduce latency.
 
 ---
@@ -64,8 +64,7 @@ Note: In this chapter we assume that dataset is so small that each machine can h
 ---
 
 If the data that you’re replicating does not change over time, then replication is easy:
-you just need to copy the data to every node once, and you’re done. All of the difficulty in replication lies in handling changes to replicated data, and that’s what this
-chapter is about. We will discuss three popular algorithms for replicating changes
+you just need to copy the data to every node once, and you’re done. All of the difficulty in replication lies in handling changes to replicated data, and that’s what this chapter is about. We will discuss three popular algorithms for replicating changes
 between nodes: <b>single-leader</b>, <b>multi-leader</b>, and <b>leaderless</b> replication.
 
 ---
@@ -80,8 +79,7 @@ between nodes: <b>single-leader</b>, <b>multi-leader</b>, and <b>leaderless</b> 
 - Leader-based replication
     - Clients send write requests to the leader, which first writes the new data to its local storage.
     - The leader then sends the data change to its followers/slaves as part of a <i>replication log</i> or <i>change stream</i>.
-    - Each follower then updates its local copy of the database by writing in the same order 
-    as that of leader.
+    - Each follower then updates its local copy of the database by writing in the same order as that of leader.
     - If a client wants to read from DB, it can query either the leader or any of the followers. However, writes are only accepted on the leader.
     - This mode of replication is a built-in feature in many softwares, including PostgreSQL, MySQL, MongoDB, Espresso, Kafka.
 
@@ -191,7 +189,7 @@ The leader logs every write request (statement) that it executes and sends to it
 
 ### Write-ahead log (WAL) shipping
 
-The leader writes log (every modification/write) to the disk and also sends it across the netweork to its followers.
+The leader writes log (every modification/write) to the disk and also sends it across the network to its followers.
 - Follower processes this log, and builds a copy of the exact same data structures as found of the leader.
 - Disadvantage:
     - Log describes the data on a very low level: which bytes were changed in which disk blocks. This makes replication closely coupled to the storage engine. If DB changes its storage format from one version to another, if is not possible to run different versions of DB software on leader and the followers.
@@ -204,7 +202,7 @@ Use different log formats for replication (logical log) and for the storage engi
 
 A logical log for a relation DB is usually a sequence of records describing writes to DB tables at the granularity of a row.
 
-Advantage: Leader and folower can run on different versions of DB software or even different storage enginers, since logical log is decoupled from the storage engine internals (backward compatible).
+Advantage: Leader and folower can run on different versions of DB software or even different storage engines, since logical log is decoupled from the storage engine internals (backward compatible).
 
 ---
 
@@ -240,13 +238,12 @@ The previous replication approaches are implemented by DB systems, without invol
 - When reading something that the user may have modified, read it from the leader; otherwise, read it from a follower.
     - For ex, user profile information on a social network is normally only editable by the owner of the profile, not by anybody else. Thus, a simple rule is: always read the user’s own profile from the leader, and any other users’ profiles from a follower.
 ---
-- If most things in the application are potentially editable by the user, that approach won’t be effective, as most things would have to be read from the leader (negating the benefit of read scaling). In that case, other criteria may be
-used to decide whether to read from the leader.     
+- If most things in the application are potentially editable by the user, that approach won’t be effective, as most things would have to be read from the leader (negating the benefit of read scaling). In that case, other criteria may be used to decide whether to read from the leader.     
     - For example, you could track the time of the last update and, for one minute after the last update, make all reads from the leader
     - You could also monitor the replication lag on followers and prevent queries on any follower that is more than one minute behind the leader.
 ---
 - The client can remember the timestamp of its most recent write—then the system can ensure that the replica serving any reads for that user reflects updates at least until that timestamp.    
-    - If a replica is not sufficiently up to date, either the read can be handled by another replica or the query can wait until the replica has
+    - If a replica is not sufficiently up to date, either the read can be handled by another replica or the query can wait until the replica has caught up.
 
 - If your replicas are distributed across multiple datacenters (for geographical proximity to users or for availability), there is additional complexity. Any request that needs to be served by the leader must be routed to the datacenter that contains the leader.
 
@@ -276,8 +273,8 @@ Problem: User moves backward in time.
 
 ---
 
-- Monotonic reads is a guarantee that this kind of anamaly does not happen.
-- It's a lesser guarantee than strong consistency, but a stron guarantee than eventual consistency.
+- Monotonic reads is a guarantee that this kind of anomaly does not happen.
+- It's a lesser guarantee than strong consistency, but a stronger guarantee than eventual consistency.
 - User will not read older data after having previously read newer data.
 - One way of achieving this is to make sure each user always reads from the same replica (maybe chose replicas based on the hash of user ID).
 
@@ -291,4 +288,4 @@ Problem: User moves backward in time.
 
 Consistent Prefix Reads: If a sequence of writes happens in a certain order, then anyone reading those writes will see them appear in the same order.
 
-- One solution is to make sure that any writes that are causally related to each other are written to the same partition—but in some applications that cannot be done efficiently. There are also algorithms that explicitly keep track of causal dependencies (we'll talk about those in later chapters).
+- One solution is to make sure that any writes that are causally related to each other are written to the same partition - but in some applications that cannot be done efficiently. There are also algorithms that explicitly keep track of causal dependencies (we'll talk about those in later chapters).
